@@ -1,0 +1,47 @@
+# Clean up previous build
+docker-compose down -v
+
+# Rebuild with no cache
+docker-compose build --no-cache
+
+# Start services
+docker-compose up
+
+
+🛠️ Step-by-Step Fix Process
+1. Update Dockerfile
+Replace backend/Dockerfile with the optimized version above.
+
+2. Clean Everything
+Bash
+
+# Stop and remove all containers
+docker-compose down -v
+
+# Remove old images (optional but recommended)
+docker system prune -a
+3. Rebuild
+Bash
+
+# Build with no cache
+docker-compose build --no-cache backend celery
+4. Start Services
+Bash
+
+# Start all services
+docker-compose up
+5. Create Superuser (in new terminal)
+Bash
+
+docker-compose exec backend python manage.py createsuperuser
+
+
+# Clean everything
+docker-compose down -v
+docker system prune -f
+
+# Rebuild
+docker-compose build --no-cache
+
+# Start with logs
+docker-compose up
