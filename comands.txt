@@ -45,3 +45,17 @@ docker-compose build --no-cache
 
 # Start with logs
 docker-compose up
+
+
+#finding which service used my which service 
+docker ps -a --filter ancestor=product-image-generator-frontend:latest
+
+#remove container by its id
+docker rm 056607588b92
+
+docker rm -f productgen_db
+# or equivalently
+# docker rm -f d0c779483e07
+
+stop container by its id 
+docker stop <CONTAINER_ID>
