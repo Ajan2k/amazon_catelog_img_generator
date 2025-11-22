@@ -13,8 +13,8 @@ const api = axios.create({
 // Add request interceptor to ensure headers are always set
 api.interceptors.request.use(
   (config) => {
-    // Ensure Content-Type is set for all requests
-    if (!config.headers['Content-Type']) {
+    // Only set JSON content type if it's NOT a file upload
+    if (!config.headers['Content-Type'] && !(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
     return config;
@@ -26,11 +26,8 @@ api.interceptors.request.use(
 
 // Products
 export const createProduct = async (formData) => {
-  const response = await api.post('/products/', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  // Let Axios and the browser handle the Content-Type automatically
+  const response = await api.post('/products/', formData);
   return response.data;
 };
 

@@ -59,3 +59,8 @@ docker rm -f productgen_db
 
 stop container by its id 
 docker stop <CONTAINER_ID>
+
+changes apply steps:
+docker-compose down
+docker-compose build
+docker-compose up

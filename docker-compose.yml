@@ -35,9 +35,11 @@ services:
       dockerfile: Dockerfile
     container_name: productgen_backend
     command: >
+      sh -c "
       python manage.py migrate &&
       python manage.py init_templates &&
       python manage.py collectstatic --noinput &&
+      gunicorn core.wsgi:application --bind 0.0.0.0:8000
       "
     volumes:
       - ./backend:/app
