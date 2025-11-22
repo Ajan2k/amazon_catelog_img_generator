@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     libpq-dev \
     netcat-traditional \
+    ffmpeg libsm6 libxext6 \    
+    fonts-dejavu fontconfig \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

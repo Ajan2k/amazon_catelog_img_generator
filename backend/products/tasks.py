@@ -29,7 +29,8 @@ def generate_product_images(job_id):
         generator = ImageGenerator()
         
         # Remove background from original image
-        product_cutout = generator.remove_background(original_image.image.path)
+        with original_image.image.open('rb') as img_file:
+            product_cutout = generator.remove_background(img_file)
         
         # Get logo path
         logo_path = get_logo_path()

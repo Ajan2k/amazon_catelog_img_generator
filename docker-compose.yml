@@ -35,20 +35,15 @@ services:
       dockerfile: Dockerfile
     container_name: productgen_backend
     command: >
-      sh -c "
-      echo 'Waiting for database...' &&
-      while ! nc -z db 5432; do sleep 1; done &&
-      echo 'Database is ready!' &&
-      python manage.py makemigrations products &&
       python manage.py migrate &&
       python manage.py init_templates &&
       python manage.py collectstatic --noinput &&
-      python manage.py runserver 0.0.0.0:8000
       "
     volumes:
       - ./backend:/app
       - media_volume:/app/media
       - static_volume:/app/staticfiles
+      - u2net_cache:/app/.u2net
     ports:
       - "8000:8000"
     environment:
@@ -64,6 +59,7 @@ services:
       - DB_PORT=5432
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - U2NET_HOME=/app/.u2net
     depends_on:
       db:
         condition: service_healthy
@@ -117,3 +113,4 @@ volumes:
   postgres_data:
   media_volume:
   static_volume:
+  u2net_cache:

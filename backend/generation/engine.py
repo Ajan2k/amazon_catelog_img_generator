@@ -11,12 +11,14 @@ class ImageGenerator:
         self.canvas_size = canvas_size
         self.default_font_size = 60
     
-    def remove_background(self, image_path):
-        """Remove background from product image"""
-        with open(image_path, 'rb') as input_file:
-            input_data = input_file.read()
-            output_data = remove(input_data)
-            
+    def remove_background(self, image_file_obj):
+        """Remove background from product image file object"""
+        # Ensure we are at the start of the file
+        image_file_obj.seek(0)
+        input_data = image_file_obj.read()
+        
+        # Process
+        output_data = remove(input_data)
         image = Image.open(BytesIO(output_data))
         return image
     
