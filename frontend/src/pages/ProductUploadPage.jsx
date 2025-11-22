@@ -41,37 +41,59 @@ const ProductUploadPage = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!image) {
-      setError('Please upload a product image');
-      return;
-    }
+      e.preventDefault();
+      
+      if (!image) {
+        setError('Please upload a product image');
+        return;
+      }
 
-    if (!formData.name || !formData.sku) {
-      setError('Please fill in all required fields');
-      return;
-    }
+      if (!formData.name || !formData.sku) {
+        setError('Please fill in all required fields');
+        return;
+      }
 
-    setUploading(true);
-    setError('');
+      setUploading(true);
+      setError('');
 
-    try {
-      const data = new FormData();
-      data.append('name', formData.name);
-      data.append('sku', formData.sku);
-      data.append('description', formData.description);
-      data.append('original_image', image);
+      try {
+        const data = new FormData();
+        data.append('name', formData.name);
+        data.append('sku', formData.sku);
+        data.append('description', formData.description);
+        data.append('original_image', image);
 
-      const product = await createProduct(data);
-      navigate(`/product/${product.id}`);
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Error uploading product');
-    } finally {
-      setUploading(false);
-    }
-  };
-
+        const product = await createProduct(data);
+        navigate(`/product/${product.id}`);
+      } catch (err) {
+        console.error("Upload failed:", err); // Log full error to console for debugging
+        
+        // improved error handling logic
+        if (err.response && err.response.data) {
+          const data = err.response.data;
+          
+          // Case 1: Backend sent a specific "detail" message (e.g., 401/403 errors)
+          if (data.detail) {
+            setError(data.detail);
+          } 
+          // Case 2: Backend sent field validation errors (e.g., Duplicate SKU)
+          else {
+            // Join all error messages into a readable string
+            // Example: "sku: Product with this SKU already exists."
+            const fieldErrors = Object.entries(data)
+              .map(([key, messages]) => `${key}: ${Array.isArray(messages) ? messages.join(' ') : messages}`)
+              .join(' | ');
+              
+            setError(fieldErrors || 'Error uploading product (Check console)');
+          }
+        } else {
+          // Case 3: Network error or server down
+          setError('Network Error: Could not connect to backend. Is Docker running?');
+        }
+      } finally {
+        setUploading(false);
+      }
+    };
   const removeImage = () => {
     setImage(null);
     setPreview(null);

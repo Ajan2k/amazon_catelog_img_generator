@@ -2,19 +2,22 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/products';
 
+// frontend/src/services/api.js
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    // REMOVE 'Content-Type': 'application/json' from here.
+    // It causes file uploads to fail because it overrides the browser's boundary generation.
     'Accept': 'application/json',
   },
 });
 
-// Add request interceptor to ensure headers are always set
+// The interceptor will now safely add 'application/json' ONLY when needed
 api.interceptors.request.use(
   (config) => {
-    // Only set JSON content type if it's NOT a file upload
-    if (!config.headers['Content-Type'] && !(config.data instanceof FormData)) {
+    // If it's NOT a file upload (FormData), make it JSON
+    if (!(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
     return config;
