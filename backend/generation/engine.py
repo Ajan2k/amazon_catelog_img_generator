@@ -66,7 +66,7 @@ class ImageGenerator:
             font = ImageFont.truetype(font_path, font_size or self.default_font_size)
         else:
             try:
-                font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 
+                font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", #this file path only exist in linux server when run this on windows program would crash that why we used try here
                                          font_size or self.default_font_size)
             except:
                 font = ImageFont.load_default()
@@ -165,8 +165,9 @@ class ImageGenerator:
         for word in words:
             test_line = ' '.join(current_line + [word])
             bbox = font.getbbox(test_line)
+            print("bbox :",bbox)
             width = bbox[2] - bbox[0]
-            
+            print("width :",width)
             if width <= max_width:
                 current_line.append(word)
             else:
@@ -187,3 +188,10 @@ class ImageGenerator:
         
         canvas.save(output_path, format=format, quality=95)
         return output_path
+    
+if __name__ == "__main__":
+    test ="Logic: This is the crucial part. It asks the font file: \"If I were to write 'The quick brown' in size 40 Arial, exactly how many pixels wide would it be?\"bbox: Returns (left, top, right, bottom).width: The Right edge minus the Left edge equals the total width."
+    obj = ImageGenerator()
+    print(obj._wrap_text(text=test, max_width=50,font=ImageFont.load_default()))
+    
+    
