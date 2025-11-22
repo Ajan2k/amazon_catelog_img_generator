@@ -1,153 +1,189 @@
-# Default template specifications
+# backend/generation/templates.py
+
+# Standard 7Seven Colors
+COLOR_RED = [255, 0, 0, 255]
+COLOR_BLACK = [0, 0, 0, 255]
+COLOR_GREY = [100, 100, 100, 255]
+COLOR_WHITE = [255, 255, 255, 255]
+
+# Standard Logo Position (Top Right)
+LOGO_DEFAULT = {"position": [1750, 100], "scale": 0.25}
 
 TEMPLATES = {
-    "main_product": {
-        "name": "Main Product Image",
+    # 1. Main Listing Image (Clean White)
+    "main_hero": {
+        "name": "01. Main Hero Image",
         "kind": "main",
         "canvas_size": [2000, 2000],
-        "background_color": [255, 255, 255],
-        "product_position": {"x": 1000, "y": 1000, "scale": 0.8, "rotate": 0},
-        "logo": {"position": [1700, 100], "scale": 0.15}
+        "background_color": COLOR_WHITE,
+        "product_position": {"x": 1000, "y": 1000, "scale": 0.85, "rotate": 0},
+        "logo": LOGO_DEFAULT,
+        "text": [] 
     },
-    
-    "lifestyle_livingroom": {
-        "name": "Lifestyle - Living Room",
+
+    # 2. Lifestyle Comparison (Living Room)
+    # Note: Requires 'living_room_blurred.jpg' uploaded as background in Admin
+    "lifestyle_compare": {
+        "name": "02. Lifestyle Comparison",
         "kind": "lifestyle",
         "canvas_size": [2000, 2000],
-        "background_color": [240, 235, 230],
-        "product_position": {"x": 1200, "y": 1100, "scale": 0.6, "rotate": -5},
+        "background_color": [240, 240, 240], # Fallback if no image
+        "product_position": {"x": 1400, "y": 1100, "scale": 0.9, "rotate": 0},
         "text": [
             {
-                "content": "{{product_name}}",
-                "position": [100, 150],
-                "font_size": 80,
-                "color": [50, 50, 50, 255],
-                "max_width": 800
+                "content": "COMPARE THE KEYS",
+                "position": [100, 100],
+                "font_size": 110,
+                "color": COLOR_RED,
+                "max_width": 1800
             },
             {
-                "content": "Perfect for your home",
-                "position": [100, 280],
+                "content": "Match Your Existing Remote Control\nWith 7Seven Remote Before Ordering",
+                "position": [1000, 1850],
                 "font_size": 50,
-                "color": [100, 100, 100, 255]
+                "color": COLOR_BLACK,
+                "align": "center"
             }
         ],
-        "logo": {"position": [1700, 100], "scale": 0.15}
+        "logo": LOGO_DEFAULT
     },
-    
-    "feature_callouts": {
-        "name": "Feature Callouts",
+
+    # 3. Compatibility (AC/TV)
+    "compatibility": {
+        "name": "03. Compatibility Check",
+        "kind": "compatibility",
+        "canvas_size": [2000, 2000],
+        "background_color": COLOR_WHITE,
+        "product_position": {"x": 1000, "y": 1300, "scale": 0.8, "rotate": 0},
+        "text": [
+            {
+                "content": "COMPATIBLE WITH",
+                "position": [100, 100],
+                "font_size": 100,
+                "color": COLOR_RED
+            },
+            {
+                "content": "{{product_name}}", # Dynamic Product Name
+                "position": [1000, 300],
+                "font_size": 80,
+                "color": COLOR_BLACK,
+                "align": "center",
+                "max_width": 1800
+            }
+        ],
+        "logo": LOGO_DEFAULT
+    },
+
+    # 4. Battery Information
+    "battery_info": {
+        "name": "04. Battery Info",
         "kind": "feature",
         "canvas_size": [2000, 2000],
-        "background_color": [255, 255, 255],
-        "product_position": {"x": 700, "y": 1000, "scale": 0.7, "rotate": 0},
-        "arrows": [
-            {
-                "start": [1100, 800],
-                "end": [950, 850],
-                "color": [255, 87, 51, 255]
-            },
-            {
-                "start": [1100, 1100],
-                "end": [950, 1050],
-                "color": [255, 87, 51, 255]
-            }
-        ],
+        "background_color": COLOR_WHITE,
+        "product_position": {"x": 600, "y": 1100, "scale": 0.85, "rotate": -5},
         "text": [
             {
-                "content": "Premium Quality",
-                "position": [1120, 770],
-                "font_size": 50,
-                "color": [255, 87, 51, 255]
+                "content": "WORKS ON",
+                "position": [1400, 1200],
+                "font_size": 80,
+                "color": COLOR_RED,
+                "align": "center"
             },
             {
-                "content": "Durable Design",
-                "position": [1120, 1070],
-                "font_size": 50,
-                "color": [255, 87, 51, 255]
-            }
-        ],
-        "logo": {"position": [1700, 100], "scale": 0.15}
-    },
-    
-    "usage_hand": {
-        "name": "Usage - In Hand",
-        "kind": "usage",
-        "canvas_size": [2000, 2000],
-        "background_color": [245, 245, 250],
-        "product_position": {"x": 1000, "y": 1000, "scale": 0.65, "rotate": 15},
-        "text": [
+                "content": "AAA BATTERIES",
+                "position": [1400, 1300],
+                "font_size": 100,
+                "color": COLOR_BLACK,
+                "align": "center"
+            },
             {
-                "content": "Easy to Use",
-                "position": [100, 100],
-                "font_size": 90,
-                "color": [30, 30, 30, 255]
+                "content": "Using New Batteries is Recommended",
+                "position": [1400, 1500],
+                "font_size": 40,
+                "color": COLOR_GREY,
+                "align": "center",
+                "max_width": 800
             }
         ],
-        "logo": {"position": [1700, 100], "scale": 0.15}
+        "logo": LOGO_DEFAULT
     },
-    
+
+    # 5. Dimensions / Size
     "dimensions": {
-        "name": "Size & Dimensions",
+        "name": "05. Dimensions",
         "kind": "dimensions",
         "canvas_size": [2000, 2000],
-        "background_color": [255, 255, 255],
-        "product_position": {"x": 1000, "y": 900, "scale": 0.7, "rotate": 0},
+        "background_color": COLOR_WHITE,
+        "product_position": {"x": 1100, "y": 1000, "scale": 0.9, "rotate": 0},
         "show_dimensions": True,
-        "dimension_bbox": [400, 400, 1600, 1400],
+        "dimension_bbox": [600, 200, 1600, 1800], # Box to draw lines around
         "dimensions_text": {
-            "width": "12 inches",
-            "height": "8 inches"
+            "width": "Width",
+            "height": "Height"
         },
-        "logo": {"position": [1700, 100], "scale": 0.15}
+        "logo": LOGO_DEFAULT
     },
-    
-    "comparison": {
-        "name": "Key Features Comparison",
-        "kind": "comparison",
+
+    # 6. Pairing Instructions (Voice Remote)
+    "pairing": {
+        "name": "06. Pairing Instructions",
+        "kind": "usage",
         "canvas_size": [2000, 2000],
-        "background_color": [250, 250, 250],
-        "product_position": {"x": 600, "y": 700, "scale": 0.5, "rotate": 0},
+        "background_color": COLOR_WHITE,
+        "product_position": {"x": 600, "y": 1100, "scale": 1.0, "rotate": 0},
         "text": [
             {
-                "content": "{{product_name}}",
-                "position": [100, 80],
-                "font_size": 70,
-                "color": [0, 0, 0, 255],
-                "max_width": 900
+                "content": "FOR PAIRING",
+                "position": [1300, 600],
+                "font_size": 110,
+                "color": [60, 60, 60, 255], # Dark Grey
+                "align": "left"
             },
             {
-                "content": "✓ High Quality Materials",
-                "position": [1100, 400],
-                "font_size": 50,
-                "color": [34, 139, 34, 255]
-            },
-            {
-                "content": "✓ Long-lasting Durability",
-                "position": [1100, 550],
-                "font_size": 50,
-                "color": [34, 139, 34, 255]
-            },
-            {
-                "content": "✓ Easy to Clean",
-                "position": [1100, 700],
-                "font_size": 50,
-                "color": [34, 139, 34, 255]
-            },
-            {
-                "content": "✓ 1 Year Warranty",
-                "position": [1100, 850],
-                "font_size": 50,
-                "color": [34, 139, 34, 255]
+                "content": "Press and Hold designated\nbuttons until the light\nstarts pulsing to pair.",
+                "position": [1300, 850],
+                "font_size": 55,
+                "color": COLOR_GREY,
+                "align": "left",
+                "max_width": 800
             }
         ],
-        "logo": {"position": [100, 1800], "scale": 0.2}
+        "logo": LOGO_DEFAULT
+    },
+    
+    # 7. Side-by-Side Comparison (Check/Cross)
+    "comparison_check": {
+        "name": "07. Check/Cross Comparison",
+        "kind": "comparison",
+        "canvas_size": [2000, 2000],
+        "background_color": COLOR_WHITE,
+        "product_position": {"x": 600, "y": 1100, "scale": 0.8, "rotate": 0},
+        "text": [
+            {
+                "content": "COMPATIBLE WITH",
+                "position": [100, 100],
+                "font_size": 100,
+                "color": COLOR_RED
+            },
+            {
+                "content": "YOUR OLD REMOTE",
+                "position": [1400, 1700],
+                "font_size": 60,
+                "color": COLOR_GREY,
+                "align": "center"
+            }
+        ],
+        # Note: This template ideally needs a secondary image upload, 
+        # which the current engine doesn't support yet. 
+        # It will place the MAIN product on the left.
+        "logo": LOGO_DEFAULT
     }
 }
 
 
 def get_template_spec(template_name):
     """Get template specification by name"""
-    return TEMPLATES.get(template_name, TEMPLATES["main_product"])
+    return TEMPLATES.get(template_name, TEMPLATES["main_hero"])
 
 
 def get_all_templates():
