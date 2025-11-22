@@ -48,6 +48,7 @@ class Template(models.Model):
     background_image = models.ImageField(upload_to='templates/', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    preview_image = models.ImageField(upload_to='template_previews/', null=True, blank=True)
     
     def __str__(self):
         return self.name

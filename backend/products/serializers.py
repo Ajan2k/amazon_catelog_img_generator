@@ -49,7 +49,7 @@ class TemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Template
         fields = ['id', 'name', 'description', 'kind', 'spec', 'background_image', 
-                  'background_url', 'is_active', 'created_at']
+                  'background_url', 'preview_image', 'is_active', 'created_at']
     
     def get_background_url(self, obj):
         request = self.context.get('request')

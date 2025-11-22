@@ -41,15 +41,21 @@ const TemplatesPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {templates.map((template) => (
           <div key={template.id} className="bg-white shadow rounded-lg overflow-hidden">
-            {template.background_url && (
-              <div className="h-48 bg-gray-100">
-                <img
-                  src={template.background_url}
-                  alt={template.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
+           
+          {template.preview_image ? (
+            <div className="h-48 bg-gray-100">
+              <img
+                src={template.preview_image} // <--- CHANGE THIS
+                alt={template.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            // Fallback if no preview exists
+            <div className="h-48 bg-gray-200 flex items-center justify-center">
+              <Layout className="h-12 w-12 text-gray-400" />
+            </div>
+          )}
             
             <div className="p-5">
               <div className="flex items-start justify-between">
