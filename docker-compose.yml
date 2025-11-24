@@ -98,6 +98,8 @@ services:
       - backend
     restart: unless-stopped
 
+    # ... (keep db, redis, backend, celery as they are) ...
+
   frontend:
     build:
       context: ./frontend 
@@ -106,12 +108,34 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    ports:
-      - "3000:3000"
+    # REMOVE ports mapping 3000:3000 if you want to force traffic through Nginx,
+    # otherwise keep it for dev access, but images might still break on port 3000 
+    # if using absolute URLs to port 8000 without Nginx.
+    # Ideally, just let Nginx handle external access:
+    expose:
+      - "3000"
     environment:
-      - VITE_API_URL=http://localhost:8000/api/products
+      # Update this to point to Nginx (port 80) instead of direct backend (8000)
+      # Or keep it relative "/api/products" if everything is on same domain
+      - VITE_API_URL=/api/products
+      
     depends_on:
       - backend
+    restart: unless-stopped
+
+  # ADD THIS SERVICE
+  nginx:
+    image: nginx:alpine
+    container_name: productgen_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - static_volume:/static  # Maps to location /static/ in nginx.conf
+      - media_volume:/media    # Maps to location /media/ in nginx.conf
+    depends_on:
+      - backend
+      - frontend
     restart: unless-stopped
 
 volumes:

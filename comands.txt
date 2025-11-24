@@ -64,3 +64,15 @@ changes apply steps:
 docker-compose down
 docker-compose build
 docker-compose up
+
+# 1. Stop all containers and remove the old "backend" container
+docker-compose down --rmi local
+
+# 2. Rebuild everything from scratch (This ensures your latest code is copied in)
+docker-compose up --build
+
+# 1. Apply the new migrations to the database
+docker-compose exec backend python manage.py migrate
+
+# 2. Restart the backend to ensure it loads everything fresh
+docker-compose restart backend

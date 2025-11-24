@@ -11,8 +11,8 @@ from .serializers import (
     ProductSerializer, ProductCreateSerializer, ImageAssetSerializer,
     TemplateSerializer, GenerationJobSerializer, LogoSerializer
 )
-from .tasks import generate_product_images
 
+# REMOVED: from .tasks import generate_product_images (This caused the crash)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class ProductViewSet(viewsets.ModelViewSet):
@@ -27,6 +27,10 @@ class ProductViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], parser_classes=[JSONParser])
     def generate_images(self, request, pk=None):
         """Trigger image generation for a product"""
+        # --- FIX: Local import to prevent circular dependency ---
+        from .tasks import generate_product_images
+        # ------------------------------------------------------
+
         product = self.get_object()
         template_ids = request.data.get('template_ids', [])
         

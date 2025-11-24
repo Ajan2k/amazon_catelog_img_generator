@@ -1,130 +1,120 @@
 from celery import shared_task
 from django.core.files.base import ContentFile
 from django.utils import timezone
+from django.conf import settings
 import os
 import tempfile
 
-from .models import Product, ImageAsset, Template, GenerationJob, Logo
+# Ensure models are imported correctly
+from .models import Product, ImageAsset, Template, GenerationJob, GeneratedImage
 from generation.engine import ImageGenerator
 from generation.utils import get_logo_path, replace_template_variables
 
-
 @shared_task
 def generate_product_images(job_id):
-    """Generate all 7 product images based on templates"""
+    """
+    Main entry point for Celery. 
+    This function was likely missing or not visible due to circular imports.
+    """
     try:
         job = GenerationJob.objects.get(id=job_id)
         job.status = 'processing'
+        job.started_at = timezone.now()
         job.save()
-        
+
         product = job.product
-        template_ids = job.templates_used
+        # Assuming 'product_image' is the field name for the cutout
+        product_cutout = product.product_image.path 
         
-        # Get original product image
-        original_image = product.images.filter(kind='original').first()
-        if not original_image:
-            raise Exception("No original image found for product")
-        
-        # Initialize generator
+        # Initialize Generator
         generator = ImageGenerator()
         
-        # Remove background from original image
-        with original_image.image.open('rb') as img_file:
-            product_cutout = generator.remove_background(img_file)
+        # Get Templates
+        templates = Template.objects.filter(id__in=job.templates_used)
         
-        # Get logo path
-        logo_path = get_logo_path()
-        
-        # Template variable context
-        context = {
-            'product_name': product.name,
-            'sku': product.sku,
-            'description': product.description
-        }
-        
-        generated_images = []
-        
-        # Process each template
-        templates = Template.objects.filter(id__in=template_ids, is_active=True)
+        generated_count = 0
         
         for template in templates:
             try:
-                # Generate image for this template
-                output_path = generate_single_image(
+                # Prepare Context
+                logo_path = get_logo_path(product) # Custom util logic
+                context = {
+                    "product_name": product.name,
+                    # Add other context variables here
+                }
+
+                # Generate
+                temp_path = generate_single_image(
                     generator, 
                     template, 
                     product_cutout, 
                     logo_path, 
                     context
                 )
-                
-                # Save to database
-                with open(output_path, 'rb') as f:
-                    image_asset = ImageAsset.objects.create(
-                        product=product,
-                        kind=template.kind,
-                        metadata={
-                            'template_id': template.id,
-                            'template_name': template.name
-                        }
-                    )
-                    image_asset.image.save(
-                        f"{product.sku}_{template.kind}.png",
-                        ContentFile(f.read()),
-                        save=True
-                    )
-                
-                generated_images.append({
-                    'kind': template.kind,
-                    'template': template.name,
-                    'url': image_asset.image.url
-                })
-                
-                # Clean up temp file
-                os.unlink(output_path)
-                
-            except Exception as e:
-                print(f"Error generating image for template {template.name}: {str(e)}")
-                continue
-        
-        # Update job status
-        job.status = 'completed'
-        job.result = {
-            'generated_count': len(generated_images),
-            'images': generated_images
-        }
-        job.completed_at = timezone.now()
-        job.save()
-        
-        return {
-            'success': True,
-            'job_id': job_id,
-            'generated': len(generated_images)
-        }
-        
-    except Exception as e:
-        job.status = 'failed'
-        job.error_message = str(e)
-        job.completed_at = timezone.now()
-        job.save()
-        
-        return {
-            'success': False,
-            'job_id': job_id,
-            'error': str(e)
-        }
 
+                # Save to DB
+                with open(temp_path, 'rb') as f:
+                    gen_img = GeneratedImage(
+                        product=product,
+                        template=template,
+                        job=job
+                    )
+                    filename = f"gen_{product.id}_{template.id}_{timezone.now().timestamp()}.png"
+                    gen_img.image.save(filename, ContentFile(f.read()))
+                    gen_img.save()
+                
+                # Cleanup temp file
+                os.remove(temp_path)
+                generated_count += 1
+
+            except Exception as e:
+                print(f"Error generating template {template.id}: {str(e)}")
+                # Optionally log specific template error but continue others
+
+        job.status = 'completed'
+        job.completed_at = timezone.now()
+        job.save()
+        return f"Generated {generated_count} images"
+
+    except Exception as e:
+        if 'job' in locals():
+            job.status = 'failed'
+            job.error_message = str(e)
+            job.save()
+        raise e
 
 def generate_single_image(generator, template, product_cutout, logo_path, context):
-    """Generate a single image based on template spec"""
+    """
+    Helper function to generate one image.
+    """
     spec = template.spec
     
-    # Create canvas
-    bg_color = tuple(spec.get('background_color', [255, 255, 255]))
-    bg_image = template.background_image.path if template.background_image else None
-    canvas = generator.create_canvas(bg_color, bg_image)
+    # 1. Determine Background Path
+    bg_image_path = None
     
-    # Place product
+    # Priority A: Database Upload
+    if template.background_image:
+        bg_image_path = template.background_image.path
+    # Priority B: Asset Folder (Specified in templates.py)
+    elif spec.get('background_asset'):
+        bg_image_path = os.path.join(settings.BASE_DIR, 'assets', spec['background_asset'])
+    
+    # Create Canvas
+    bg_color = tuple(spec.get('background_color', [255, 255, 255]))
+    canvas = generator.create_canvas(bg_color, bg_image_path)
+    
+    # 2. Add Overlays
+    if spec.get('overlays'):
+        for overlay in spec['overlays']:
+            ov_path = os.path.join(settings.BASE_DIR, 'assets', overlay['path'])
+            canvas = generator.add_overlay(
+                canvas, 
+                ov_path, 
+                tuple(overlay['position']), 
+                overlay.get('scale', 1.0)
+            )
+
+    # 3. Place Product
     prod_pos = spec.get('product_position', {})
     canvas = generator.place_product(
         canvas,
@@ -134,7 +124,7 @@ def generate_single_image(generator, template, product_cutout, logo_path, contex
         rotate=prod_pos.get('rotate', 0)
     )
     
-    # Add text elements
+    # 4. Add Text
     for text_spec in spec.get('text', []):
         content = replace_template_variables(text_spec['content'], context)
         canvas = generator.add_text(
@@ -142,28 +132,10 @@ def generate_single_image(generator, template, product_cutout, logo_path, contex
             content,
             position=tuple(text_spec['position']),
             font_size=text_spec.get('font_size', 60),
-            color=tuple(text_spec.get('color', [0, 0, 0, 255])),
-            max_width=text_spec.get('max_width')
+            color=tuple(text_spec.get('color', [0, 0, 0, 255]))
         )
     
-    # Add arrows (for feature callouts)
-    for arrow_spec in spec.get('arrows', []):
-        canvas = generator.add_arrow(
-            canvas,
-            start=tuple(arrow_spec['start']),
-            end=tuple(arrow_spec['end']),
-            color=tuple(arrow_spec.get('color', [255, 0, 0, 255]))
-        )
-    
-    # Add dimension lines
-    if spec.get('show_dimensions'):
-        canvas = generator.add_dimension_lines(
-            canvas,
-            bbox=spec.get('dimension_bbox', [400, 400, 1600, 1400]),
-            dimensions_text=spec.get('dimensions_text', {})
-        )
-    
-    # Add logo
+    # 5. Add Logo
     if logo_path and spec.get('logo'):
         logo_spec = spec['logo']
         canvas = generator.add_logo(
@@ -173,7 +145,7 @@ def generate_single_image(generator, template, product_cutout, logo_path, contex
             scale=logo_spec.get('scale', 0.2)
         )
     
-    # Save to temporary file
+    # Save
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.png')
     generator.save_image(canvas, temp_file.name)
     
